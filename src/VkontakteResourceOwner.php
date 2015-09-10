@@ -1,6 +1,8 @@
 <?php
 
-namespace League\OAuth2\Client\Provider;
+namespace J4k\OAuth2\Client\Provider;
+use League\OAuth2\Client\Provider\ResourceOwnerInterface;
+use League\OAuth2\Client\Token\AccessToken;
 
 class VkontakteResourceOwner implements ResourceOwnerInterface
 {
@@ -11,9 +13,11 @@ class VkontakteResourceOwner implements ResourceOwnerInterface
     /**
      * @param  array $response
      */
-    public function __construct(array $response)
+    public function __construct(array $response, AccessToken $token)
     {
-        $this->data = $response;
+        $this->data = $response['response'][0];
+        if (isset($token->email))
+            $this->data['email'] = $token->email;
     }
     /**
      * Returns the ID for the user as a string if present.
@@ -22,7 +26,7 @@ class VkontakteResourceOwner implements ResourceOwnerInterface
      */
     public function getId()
     {
-        return $this->getField('id');
+        return $this->getField('uid');
     }
     /**
      * Returns the name for the user as a string if present.
@@ -31,7 +35,7 @@ class VkontakteResourceOwner implements ResourceOwnerInterface
      */
     public function getName()
     {
-        return $this->getField('name');
+        return $this->getField('screen_name');
     }
     /**
      * Returns the first name for the user as a string if present.
@@ -59,60 +63,6 @@ class VkontakteResourceOwner implements ResourceOwnerInterface
     public function getEmail()
     {
         return $this->getField('email');
-    }
-    /**
-     * Returns the current location of the user as an array.
-     *
-     * @return array|null
-     */
-    public function getHometown()
-    {
-        return $this->getField('hometown');
-    }
-    /**
-     * Returns the "about me" bio for the user as a string if present.
-     *
-     * @return string|null
-     */
-    public function getBio()
-    {
-        return $this->getField('bio');
-    }
-    /**
-     * Returns the picture of the user as a GraphPicture
-     *
-     * @return array|null
-     */
-    public function getPictureUrl()
-    {
-        return $this->getField('picture_url');
-    }
-    /**
-     * Returns the gender for the user as a string if present.
-     *
-     * @return string|null
-     */
-    public function getGender()
-    {
-        return $this->getField('gender');
-    }
-    /**
-     * Returns the locale of the user as a string if available.
-     *
-     * @return string|null
-     */
-    public function getLocale()
-    {
-        return $this->getField('locale');
-    }
-    /**
-     * Returns the Facebook URL for the user as a string if available.
-     *
-     * @return string|null
-     */
-    public function getLink()
-    {
-        return $this->getField('link');
     }
     /**
      * Returns all the data obtained about the user.
