@@ -2,30 +2,74 @@
 
 namespace J4k\OAuth2\Client\Provider;
 
-use League\OAuth2\Client\Entity\User;
+use League\OAuth2\Client\Entity\User as OAuthUser;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Provider\AbstractProvider;
+use League\OAuth2\Client\Provider\Exception\VkontakteProviderException;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Provider\VkontakteResourceOwner;
+use Psr\Http\Message\ResponseInterface;
 
 
 class Vkontakte extends AbstractProvider
 {
-    public $scopes = ['email'];
-    public $uidKey = 'user_id';
-    public $responseType = 'json';
+    protected $scopes = ['email'];
+    protected $responseType = 'json';
 
-    public function urlAuthorize()
+    public function getBaseAuthorizationUrl()
     {
         return 'https://oauth.vk.com/authorize';
     }
 
-    public function urlAccessToken()
+    public function getBaseAccessTokenUrl(array $params)
     {
         return 'https://oauth.vk.com/access_token';
     }
-    
-    public function getAccessToken($grant = 'authorization_code', $params = [])
+
+    public function getResourceOwnerDetailsUrl(AccessToken $token)
     {
-        if (is_string($grant)) {
+        $fields = [
+            'nickname',
+            'screen_name',
+            'sex',
+            'bdate',
+            'city',
+            'country',
+            'timezone',
+            'photo_50',
+            'photo_100',
+            'photo_200_orig',
+            'has_mobile',
+            'contacts',
+            'education',
+            'online',
+            'counters',
+            'relation',
+            'last_seen',
+            'status',
+            'can_write_private_message',
+            'can_see_all_posts',
+            'can_see_audio',
+            'can_post',
+            'universities',
+            'schools',
+            'verified', ];
+
+        //dd($token);
+        $userId = $token->getResourceOwnerId();
+        $tokenValue = $token->getToken();
+        return "https://api.vk.com/method/users.get?user_id={$userId}&fields="
+            .implode($this->getScopeSeparator(), $fields)."&access_token={$tokenValue}";
+    }
+
+    protected function getDefaultScopes()
+    {
+        return $this->scopes;
+    }
+    
+    public function getAccessToken($grant = 'authorization_code', array $params = [])
+    {
+        /*if (is_string($grant)) {
             // PascalCase the grant. E.g: 'authorization_code' becomes 'AuthorizationCode'
             $className = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $grant)));
             $grant = 'League\\OAuth2\\Client\\Grant\\'.$className;
@@ -53,14 +97,14 @@ class Vkontakte extends AbstractProvider
                     // @codeCoverageIgnoreStart
                     // No providers included with this library use get but 3rd parties may
                     $client = $this->getHttpClient();
-                    $client->setBaseUrl($this->urlAccessToken() . '?' . $this->httpBuildQuery($requestParams, '', '&'));
+                    $client->setBaseUrl($this->getBaseAccessTokenUrl() . '?' . $this->httpBuildQuery($requestParams, '', '&'));
                     $request = $client->get(null, null, $requestParams)->send();
                     $response = $request->getBody();
                     break;
                     // @codeCoverageIgnoreEnd
                 case 'POST':
                     $client = $this->getHttpClient();
-                    $client->setBaseUrl($this->urlAccessToken());
+                    $client->setBaseUrl($this->getBaseAccessTokenUrl());
                     $request = $client->post(null, null, $requestParams)->send();
                     $response = $request->getBody();
                     break;
@@ -98,7 +142,11 @@ class Vkontakte extends AbstractProvider
         $result = $this->prepareAccessTokenResult($result);
 
         $accessToken = $grant->handleResponse($result);
+        */
+        var_dump('OK');
+        $accessToken = parent::getAccessToken($grant, $params);
 
+        //dd($accessToken);
         // Add email from response
         if (!empty($result['email'])) {
             $accessToken->email = $result['email'];
@@ -106,45 +154,10 @@ class Vkontakte extends AbstractProvider
         return $accessToken;
     }
 
-    public function urlUserDetails(AccessToken $token)
-    {
-        $fields = ['email',
-            'nickname',
-            'screen_name',
-            'sex',
-            'bdate',
-            'city',
-            'country',
-            'timezone',
-            'photo_50',
-            'photo_100',
-            'photo_200_orig',
-            'has_mobile',
-            'contacts',
-            'education',
-            'online',
-            'counters',
-            'relation',
-            'last_seen',
-            'status',
-            'can_write_private_message',
-            'can_see_all_posts',
-            'can_see_audio',
-            'can_post',
-            'universities',
-            'schools',
-            'verified', ];
-
-        return "https://api.vk.com/method/users.get?user_id={$token->uid}&fields="
-            .implode(",", $fields)."&access_token={$token}";
-    }
-
     public function userDetails($response, AccessToken $token)
     {
         $response = $response->response[0];
-
-        $user = new User();
-
+        $user = new OAuthUser();
         $email = (isset($token->email)) ? $token->email : null;
         $location = (isset($response->country)) ? $response->country : null;
         $description = (isset($response->status)) ? $response->status : null;
@@ -160,14 +173,12 @@ class Vkontakte extends AbstractProvider
             'description' => $description,
             'imageUrl' => $response->photo_200_orig,
         ]);
-
         return $user;
     }
 
     public function userUid($response, AccessToken $token)
     {
         $response = $response->response[0];
-
         return $response->uid;
     }
 
@@ -179,7 +190,34 @@ class Vkontakte extends AbstractProvider
     public function userScreenName($response, AccessToken $token)
     {
         $response = $response->response[0];
-
         return [$response->first_name, $response->last_name];
     }
-}
+
+    protected function checkResponse(ResponseInterface $response, $data)
+    {
+        if (isset($data['error'])) {
+            throw new IdentityProviderException(
+                $data['error_description'] ?: $response->getReasonPhrase(),
+                $response->getStatusCode(),
+                $response
+            );
+        }
+    }
+
+    protected function createResourceOwner(array $response, AccessToken $token)
+    {
+        //var_dump($response);
+        return new VkontakteResourceOwner($response);
+    }
+
+    protected function getAccessTokenResourceOwnerId()
+    {
+        return 'user_id';
+    }
+
+    protected function prepareAccessTokenResponse(array $result)
+    {
+        //dd(parent::prepareAccessTokenResponse($result));
+        return parent::prepareAccessTokenResponse($result);
+    }
+} 
