@@ -9,7 +9,7 @@ This package provides [Vkontakte](https://vk.com) integration for [OAuth2 Client
 ## Installation
 
 ```sh
-composer require acidy84/oauth2-vkontakte
+composer require sergey-sla/oauth2-vkontakte
 ```
 
 ## Usage
