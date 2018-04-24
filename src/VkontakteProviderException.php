@@ -2,6 +2,6 @@
 
 namespace League\OAuth2\Client\Provider\Exception;
 
-class VkontakteProviderException extends Exception
+class VkontakteProviderException extends \Exception
 {
 }
