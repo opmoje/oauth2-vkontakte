@@ -21,7 +21,6 @@ class Vkontakte extends AbstractProvider
      * @var bool version of vkontakte api
      */
     protected $version = '5.73';
-
     
     /**
      * Vkontakte constructor.
