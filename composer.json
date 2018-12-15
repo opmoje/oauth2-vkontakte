@@ -1,5 +1,5 @@
 {
-    "name": "sergey-sla/oauth2-vkontakte",
+    "name": "zaartix/oauth2-vkontakte",
     "description": "Vkontakte provider for league/oauth2-client",
     "keywords": [
         "league",
@@ -8,8 +8,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Jack Wall",
-            "email": "jw@jack.gd"
+            "name": "zaARTix",
+            "email": "zaartix@yandex.ru"
         }
     ],
     "require": {
