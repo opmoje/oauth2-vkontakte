@@ -20,7 +20,7 @@ class Vkontakte extends AbstractProvider
     /**
      * @var bool version of vkontakte api
      */
-    protected $version;
+    protected $version = '5.73';
 
     /**
      * Vkontakte constructor.
@@ -30,10 +30,6 @@ class Vkontakte extends AbstractProvider
      */
     public function __construct(array $options = [], array $collaborators = [])
     {
-        if (empty($options['version'])) {
-            throw new VkontakteProviderException('Version param is mandatory');
-        }
-
         parent::__construct($options, $collaborators);
     }
 
