@@ -22,6 +22,7 @@ class Vkontakte extends AbstractProvider
      */
     protected $version = '5.73';
 
+    
     /**
      * Vkontakte constructor.
      * @param array $options
