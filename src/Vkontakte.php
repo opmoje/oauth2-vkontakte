@@ -20,7 +20,8 @@ class Vkontakte extends AbstractProvider
     /**
      * @var bool version of vkontakte api
      */
-    protected $version = '5.73';
+    protected $version = '5.81';
+
     
     /**
      * Vkontakte constructor.
@@ -117,9 +118,9 @@ class Vkontakte extends AbstractProvider
      */
     protected function checkResponse(ResponseInterface $response, $data)
     {
-        if (isset($data['error'])) {
+        if (!empty($data['error'])) {
             throw new IdentityProviderException(
-                isset($data['error_description']) ? $data['error_description'] : $response->getReasonPhrase(),
+                $data['error_msg'] ?: $response->getReasonPhrase(),
                 $response->getStatusCode(),
                 $response
             );
