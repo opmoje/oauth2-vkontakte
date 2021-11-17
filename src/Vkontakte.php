@@ -118,9 +118,9 @@ class Vkontakte extends AbstractProvider
      */
     protected function checkResponse(ResponseInterface $response, $data)
     {
-        if (!empty($data['error'])) {
+        if (isset($data['error'])) {
             throw new IdentityProviderException(
-                $data['error_msg'] ?: $response->getReasonPhrase(),
+                isset($data['error_description']) ? $data['error_description'] : $response->getReasonPhrase(),
                 $response->getStatusCode(),
                 $response
             );
